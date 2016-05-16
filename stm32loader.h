@@ -18,15 +18,14 @@ namespace stm32loader {
 			// Communication data
 			#define STM32_COMM_ACK      0x79
 			#define STM32_COMM_NACK     0x1F
-			#define STM32_COMM_TIMEOUT  2000000
-			#define STM32_WRITE_BUFSIZE 256
+//			#define STM32_COMM_TIMEOUT  2000000
 			#define STM32_FLASH_START_ADDRESS 0x08000000
 
-//			int initSerialPort(char const* portName);
 			int stm32_disable_writeprotection();
 			int stm32_erase_flash();
 			int stm32_write_flash();
 			int stm32_get_commands();
+			int sendCommand(Communication::Commands Command, bool sendInverted = true);
 
 		public:
 			BootLoader(Communication::COMPort* serialPort) { comPort = serialPort; };

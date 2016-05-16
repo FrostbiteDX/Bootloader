@@ -7,12 +7,17 @@
 
 #include "communication.h"
 
+
+
+// TODO: delete this file
+
+
+
 //size_t Communication::COMPort::getBuffSize() {
 //	return BUFFSIZE;
 //}
 
 //size_t Communication::LinuxComPort::sendData(const char* buffer, const size_t length) {
-//	//TODO
 //	return 1;
 //
 //}

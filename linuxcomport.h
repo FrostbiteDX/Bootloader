@@ -16,21 +16,16 @@ namespace linuxComPort {
 			uint fileDescriptor;
 			size_t comPortStatus = -1;
 			const speed_t BAUDRATE = B38400;
-			const size_t BUFFSIZE = 64;
 
 			size_t sendByte(char data, bool sendInverted = false);
 		public:
 			LinuxComPort(const char* portName);
-			LinuxComPort() = delete;
-			virtual ~LinuxComPort();
-			LinuxComPort( const LinuxComPort &right);
 			const LinuxComPort& operator=(const LinuxComPort &right);
 
-			size_t sendCommand(Communication::Commands Command, bool sendInverted = true);
-			size_t sendData(const char* buffer, const size_t length);
-			size_t receiveData(char* buffer, size_t* length);
-			size_t getComPortStatus();
-			size_t close();
-			size_t getBuffSize(){ return BUFFSIZE; };
+			virtual size_t sendData(const char* buffer, const size_t length);
+			virtual size_t receiveData(char* buffer, size_t* length);
+			virtual size_t getComPortStatus();
+			virtual size_t close();
+			virtual size_t getBuffSize(){ return COMPort::BUFFSIZE; };
 		};
 }

@@ -7,10 +7,19 @@
 
 #include "linuxcomport.h"
 
-size_t linuxComPort::LinuxComPort::sendData(const char* buffer, const size_t length) {
-	//TODO
-	return 1;
+void WaitForAnswer(int fileDescriptor) {
+	fd_set rfds;
+	FD_ZERO(&rfds);
+	FD_SET(0, &rfds);
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 50000;
+	select(fileDescriptor, &rfds, NULL, NULL, &timeout);
+}
 
+size_t linuxComPort::LinuxComPort::sendData(const char* buffer, const size_t length) {
+	size_t count = write(fileDescriptor, buffer, length);
+	return count == length;
 }
 
 size_t linuxComPort::LinuxComPort::sendByte(char data, bool sendInverted) {
@@ -24,12 +33,24 @@ size_t linuxComPort::LinuxComPort::sendByte(char data, bool sendInverted) {
 		count += write(fileDescriptor, c, 1);
 	}
 
-//	tcflush(fileDescriptor, TCOFLUSH);				// clear IO Buffer
 	return count > 0;
 }
 
-size_t linuxComPort::LinuxComPort::sendCommand(Communication::Commands Command, bool sendInverted) {
-	return sendByte((char) Command, sendInverted);
+size_t linuxComPort::LinuxComPort::close() {
+	fileDescriptor = -1;
+	return true;
+}
+
+size_t linuxComPort::LinuxComPort::getComPortStatus() {
+	return fileDescriptor > 0;
+}
+
+size_t linuxComPort::LinuxComPort::receiveData(char* buffer, size_t* length) {
+	//WaitForAnswer(fileDescriptor);
+	ssize_t res = read(fileDescriptor, buffer, (unsigned long)*length);
+
+	*length = res;
+	return res != -1;
 }
 
 linuxComPort::LinuxComPort::LinuxComPort(const char* portName) {

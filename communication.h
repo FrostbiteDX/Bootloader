@@ -21,7 +21,8 @@ namespace Communication {
 		STM32_CMD_ERASE_FLASH = 0x43,
 		STM32_CMD_EXTENDED_ERASE_FLASH = 0x44,
 		STM32_CMD_WRITE_UNPROTECT = 0x73,
-		STM32_CMD_INIT = 0x7F
+		STM32_CMD_INIT = 0x7F,
+		STM32_PARAM_COMPLETE_ERASE = 0xFF
 	};
 
 	enum Results
@@ -35,53 +36,17 @@ namespace Communication {
 	};
 
 	class COMPort {
-//	protected:
-//		size_t comPortStatus = -1;
-//		const speed_t BAUDRATE = B38400;
-//		const size_t BUFFSIZE = 64;
+	protected:
+		const size_t BUFFSIZE = 256;
 	public:
-		COMPort();
-		COMPort( const COMPort &right);
-		virtual ~COMPort();
 		const COMPort& operator=(const COMPort &right);
 
-		virtual size_t sendCommand(Communication::Commands Command, bool sendInverted = true);
-		virtual size_t sendData(const char* buffer, const size_t length);
-		virtual size_t receiveData(char* buffer, size_t* length);
-//		virtual size_t getComPortStatus();
-//		virtual size_t close();
-		virtual size_t getBuffSize();
+		virtual size_t sendData(const char* buffer, const size_t length) = 0;
+		virtual size_t receiveData(char* buffer, size_t* length) = 0;
+		virtual size_t getComPortStatus() = 0;
+		virtual size_t close() = 0;
+		virtual size_t getBuffSize() = 0;
 	};
-
-
-//	class LinuxComPort : public COMPort {
-//	private:
-//		struct termios serPortSettings;
-//		uint fileDescriptor;
-//		size_t sendByte(char data, bool sendInverted = false);
-//	public:
-//		const LinuxComPort& operator=(const LinuxComPort &right);
-//
-////		LinuxComPort() = delete;
-//		LinuxComPort(const char* portName);
-//		size_t sendCommand(Communication::Commands Command, bool sendInverted = true);
-//		size_t sendData(const char* buffer, const size_t length);
-//		size_t receiveData(char* buffer, size_t* length);
-//		size_t getComPortStatus();
-//		size_t close();
-//		size_t getBuffSize(){ return BUFFSIZE; };
-//	};
-
-//	class NRFComPort : COMPort {
-//	...
-//	};
-//
-//	class WinComPort : COMPort {
-//	...
-//	};
-//
-//	...
-//
 }
 
 #endif

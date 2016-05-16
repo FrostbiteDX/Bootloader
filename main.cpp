@@ -16,6 +16,7 @@ int main ( int argc, const char **argv )
 
 	linuxComPort::LinuxComPort LinuxComPort("/dev/ttyUSB0");
 	stm32loader::BootLoader* bootloader = new stm32loader::BootLoader(&LinuxComPort);
+	result = bootloader->stm32_init();
 
 	if (result == Communication::STM32_INIT_ERROR || result == Communication::STM32_COMM_ERROR) {
 		printf("error at init: %d \n", result);
@@ -23,21 +24,21 @@ int main ( int argc, const char **argv )
 
 	bootloader->stm32_get_bootloader_version(&version);
 	printf("Bootloader Version: %f \n", version);
-//
-//	bootloader.stm32_get_chip_id(&chipid);
-//	printf("Chip ID: %d \n", chipid);
 
-//	errorCode = bootloader.stm32_send_go_command();
-//	printf("result go: %x \n", errorCode);
+	bootloader->stm32_get_chip_id(&chipid);
+	printf("Chip ID: %d \n", chipid);
 
-//	if(result == Communication::STM32_INIT_ERROR)
-//	{
-//		errorCode = errno;
-//		printf("Init error: %d \n", errorCode);
-//	}
-//	else {
-//		bootloader.stm32_exit();
-//	}
+	errorCode = bootloader->stm32_send_go_command();
+	printf("result go: %x \n", errorCode);
+
+	if(result == Communication::STM32_INIT_ERROR)
+	{
+		errorCode = errno;
+		printf("Init error: %d \n", errorCode);
+	}
+	else {
+		bootloader->stm32_exit();
+	}
 }
 
 
