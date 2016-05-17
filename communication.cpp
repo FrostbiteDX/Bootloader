@@ -7,11 +7,7 @@
 
 #include "communication.h"
 
-
-
 // TODO: delete this file
-
-
 
 //size_t Communication::COMPort::getBuffSize() {
 //	return BUFFSIZE;
@@ -54,7 +50,7 @@
 //	cfsetospeed(&serPortSettings, BAUDRATE);
 //
 //	// soll: 8, Even par, 1 Stop
-//	serPortSettings.c_cflag |= PARENB;    	// enable parity for in- and output
+//	serPortSettings.c_cflag |= PARENB;      // enable parity for in- and output
 //	serPortSettings.c_cflag &= ~PARODD;		// even parity
 //	serPortSettings.c_cflag &= ~CSTOPB;		// only 1 stop bit
 //	serPortSettings.c_cflag &= ~CSIZE;		// reset data bit size

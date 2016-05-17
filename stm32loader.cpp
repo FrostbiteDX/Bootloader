@@ -1,161 +1,173 @@
 #include "stm32loader.h"
 
-char getACKByte() {
-	return STM32_COMM_ACK;
+char getACKByte()
+{
+    return STM32_COMM_ACK;
 }
 
-char getNACKByte() {
-	return STM32_COMM_NACK;
+char getNACKByte()
+{
+    return STM32_COMM_NACK;
 }
 
-bool isAcknowdledge(int res) {
-	bool ret = false;
-	if (res == getACKByte())
-		ret = true;
-	return ret;
+bool isAcknowdledge(int res)
+{
+    bool ret = false;
+    if (res == getACKByte()) {
+        ret = true;
+    }
+    return ret;
 }
 
-
-int stm32loader::BootLoader::sendCommand(Communication::Commands Command, bool sendInverted) {
-	char commandArray[] = {(char)Command, (char)(~Command)};
-	if (sendInverted)
-		return comPort->sendData(commandArray, 2);
-	else
-		return comPort->sendData(commandArray, 1);
+int stm32loader::BootLoader::sendCommand(Communication::Commands Command, bool sendInverted)
+{
+    char commandArray[] = {(char)Command, (char)(~Command)};
+    if (sendInverted) {
+        return comPort->sendData(commandArray, 2);
+    } else {
+        return comPort->sendData(commandArray, 1);
+    }
 }
 
-int stm32loader::BootLoader::stm32_init() {
-	char readBuffer[comPort->getBuffSize()] = { '\0' };
-	size_t len = comPort->getBuffSize();
+int stm32loader::BootLoader::stm32_init()
+{
+    char readBuffer[comPort->getBuffSize()] = { '\0' };
+    size_t len = comPort->getBuffSize();
 
-	sendCommand(Communication::STM32_CMD_INIT, false);
-	comPort->receiveData(readBuffer, &len);
+    sendCommand(Communication::STM32_CMD_INIT, false);
+    comPort->receiveData(readBuffer, &len);
 
-	int res = readBuffer[0];
+    int res = readBuffer[0];
 
-	if (!isAcknowdledge(res)) {
-		return Communication::STM32_COMM_ERROR;
-	}
+    if (!isAcknowdledge(res)) {
+        return Communication::STM32_COMM_ERROR;
+    }
 
-	return STM32_COMM_ACK == res || res == STM32_COMM_NACK ?
-			Communication::STM32_OK : Communication::STM32_INIT_ERROR;
+    return STM32_COMM_ACK == res || res == STM32_COMM_NACK ?
+           Communication::STM32_OK : Communication::STM32_INIT_ERROR;
 }
 
-int stm32loader::BootLoader::stm32_erase_flash(void) {
-	size_t buffsize = comPort->getBuffSize();
-	char readBuffer[buffsize] = { '\0' };
-	char tries = 2;
-	bool result = false;
+int stm32loader::BootLoader::stm32_erase_flash(void)
+{
+    size_t buffsize = comPort->getBuffSize();
+    char readBuffer[buffsize] = { '\0' };
+    char tries = 2;
+    bool result = false;
 
+    sendCommand(Communication::STM32_CMD_ERASE_FLASH);
+    comPort->receiveData(readBuffer, &buffsize);
 
-	sendCommand(Communication::STM32_CMD_ERASE_FLASH);
-	comPort->receiveData(readBuffer, &buffsize);
+    if (isAcknowdledge(readBuffer[0])) {
+        readBuffer[0] = '\0';
+        for (int i = 0; i < tries; i++) {
+            sendCommand(Communication::STM32_PARAM_COMPLETE_ERASE);
+            comPort->receiveData(readBuffer, &buffsize);
 
-	if(isAcknowdledge(readBuffer[0]))
-	{
-		readBuffer[0] = '\0';
-		for(int i = 0; i < tries; i++) {
-			sendCommand(Communication::STM32_PARAM_COMPLETE_ERASE);
-			comPort->receiveData(readBuffer, &buffsize);
+            if (isAcknowdledge(readBuffer[0])) {
+                i = tries;
+                result = true;
+                break;
+            }
+        }
+    }
 
-			if (isAcknowdledge(readBuffer[0])) {
-				i = tries;
-				result = true;
-				break;
-			}
-		}
-	}
-
-	return result == true ? Communication::STM32_OK : Communication::STM32_COMM_ERROR;
+    return result == true ? Communication::STM32_OK : Communication::STM32_COMM_ERROR;
 }
 
-void stm32loader::BootLoader::stm32_exit() {
-	comPort->close();
+void stm32loader::BootLoader::stm32_exit()
+{
+    comPort->close();
 }
 
-int stm32loader::BootLoader::stm32_get_commands() {
-	size_t buffsize = comPort->getBuffSize();
-	char readBuffer[buffsize] = { '\0' };
-	sendCommand(Communication::STM32_CMD_GET_COMMANDS);
-	comPort->receiveData(readBuffer, &buffsize);
+int stm32loader::BootLoader::stm32_get_commands()
+{
+    size_t buffsize = comPort->getBuffSize();
+    char readBuffer[buffsize] = { '\0' };
+    sendCommand(Communication::STM32_CMD_GET_COMMANDS);
+    comPort->receiveData(readBuffer, &buffsize);
 
-	if (!isAcknowdledge(readBuffer[0])) {
-		return Communication::STM32_COMM_ERROR;
-	}
+    if (!isAcknowdledge(readBuffer[0])) {
+        return Communication::STM32_COMM_ERROR;
+    }
 
-	return Communication::STM32_OK;
+    return Communication::STM32_OK;
 }
 
-int stm32loader::BootLoader::stm32_get_bootloader_version(float* version) {
-	size_t buffsize = comPort->getBuffSize();
-	char readBuffer[buffsize] = { '\0' };
+int stm32loader::BootLoader::stm32_get_bootloader_version(float* version)
+{
+    size_t buffsize = comPort->getBuffSize();
+    char readBuffer[buffsize] = { '\0' };
 
-	sendCommand(Communication::STM32_CMD_GET_BL_VERSION);
-	comPort->receiveData(readBuffer, &buffsize);
+    sendCommand(Communication::STM32_CMD_GET_BL_VERSION);
+    comPort->receiveData(readBuffer, &buffsize);
 
-	if (!isAcknowdledge(readBuffer[0]) && !isAcknowdledge(readBuffer[4])) {
-		return Communication::STM32_COMM_ERROR;
-	}
+    if (!isAcknowdledge(readBuffer[0]) && !isAcknowdledge(readBuffer[4])) {
+        return Communication::STM32_COMM_ERROR;
+    }
 
-	*version = (float) ((readBuffer[1] & 0xF0) >> 4);
-	float minor = readBuffer[1] & 0x0F;
-	while (minor >= 1)
-		minor /= 10;
-	*version += minor;
+    *version = (float)((readBuffer[1] & 0xF0) >> 4);
+    float minor = readBuffer[1] & 0x0F;
+    while (minor >= 1) {
+        minor /= 10;
+    }
+    *version += minor;
 
-	return Communication::STM32_OK;
+    return Communication::STM32_OK;
 }
 
-int stm32loader::BootLoader::stm32_get_chip_id(int32_t* version) {
-	size_t buffsize = comPort->getBuffSize();
-	char readBuffer[buffsize] = { '\0' };
-	sendCommand(Communication::STM32_CMD_GET_CHIP_ID);
+int stm32loader::BootLoader::stm32_get_chip_id(int32_t* version)
+{
+    size_t buffsize = comPort->getBuffSize();
+    char readBuffer[buffsize] = { '\0' };
+    sendCommand(Communication::STM32_CMD_GET_CHIP_ID);
 
-	comPort->receiveData(readBuffer, &buffsize);
+    comPort->receiveData(readBuffer, &buffsize);
 
-	if (!isAcknowdledge(readBuffer[0]) && !isAcknowdledge(readBuffer[4])) {
-		return Communication::STM32_COMM_ERROR;
-	}
+    if (!isAcknowdledge(readBuffer[0]) && !isAcknowdledge(readBuffer[4])) {
+        return Communication::STM32_COMM_ERROR;
+    }
 
-	uint major = readBuffer[2], minor = readBuffer[3];
-	uint c = ((major & 0xF0) >> 4) * 1000;
-	c += (major & 0x0F) * 100;
-	c += ((minor & 0xF0) >> 4) * 10;
-	c += minor & 0x0F;
-	*version = c;
+    uint major = readBuffer[2], minor = readBuffer[3];
+    uint c = ((major & 0xF0) >> 4) * 1000;
+    c += (major & 0x0F) * 100;
+    c += ((minor & 0xF0) >> 4) * 10;
+    c += minor & 0x0F;
+    *version = c;
 
-	return Communication::STM32_OK;
+    return Communication::STM32_OK;
 }
 
-int stm32loader::BootLoader::stm32_disable_writeprotection() {
-	size_t buffsize = comPort->getBuffSize();
-	char readBuffer[buffsize] = { '\0' };
-	sendCommand(Communication::STM32_CMD_WRITE_UNPROTECT);
+int stm32loader::BootLoader::stm32_disable_writeprotection()
+{
+    size_t buffsize = comPort->getBuffSize();
+    char readBuffer[buffsize] = { '\0' };
+    sendCommand(Communication::STM32_CMD_WRITE_UNPROTECT);
 
-	comPort->receiveData(readBuffer, &buffsize);
+    comPort->receiveData(readBuffer, &buffsize);
 
-	return isAcknowdledge(readBuffer[0]) && isAcknowdledge(readBuffer[1]);
+    return isAcknowdledge(readBuffer[0]) && isAcknowdledge(readBuffer[1]);
 }
 
-int stm32loader::BootLoader::stm32_send_go_command() {
-	size_t buffsize = comPort->getBuffSize();
-	char readBuffer[buffsize] = { '\0' };
-	char data[5];
-	int32_t adress = STM32_FLASH_START_ADDRESS;
+int stm32loader::BootLoader::stm32_send_go_command()
+{
+    size_t buffsize = comPort->getBuffSize();
+    char readBuffer[buffsize] = { '\0' };
+    char data[5];
+    int32_t adress = STM32_FLASH_START_ADDRESS;
 
-	sendCommand(Communication::STM32_CMD_GO);
-	comPort->receiveData(readBuffer, &buffsize);
+    sendCommand(Communication::STM32_CMD_GO);
+    comPort->receiveData(readBuffer, &buffsize);
 
-	if (!isAcknowdledge(readBuffer[0])) {
-		return Communication::STM32_COMM_ERROR;
-	}
+    if (!isAcknowdledge(readBuffer[0])) {
+        return Communication::STM32_COMM_ERROR;
+    }
 
-	data[1] = (adress >> 24) & 0xFF;
-	data[2] = (adress >> 16) & 0xFF;
-	data[3] = (adress >> 8) & 0xFF;
-	data[4] = (adress >> 0) & 0xFF;
-	data[5] = data[1] ^ data[2] ^ data[3] ^ data[4]; // Checksum
-	comPort->sendData(data, 5);
+    data[1] = (adress >> 24) & 0xFF;
+    data[2] = (adress >> 16) & 0xFF;
+    data[3] = (adress >> 8) & 0xFF;
+    data[4] = (adress >> 0) & 0xFF;
+    data[5] = data[1] ^ data[2] ^ data[3] ^ data[4]; // Checksum
+    comPort->sendData(data, 5);
 
 //	sendByte(fileDescriptorUART, B2);
 //	sendByte(fileDescriptorUART, B3);
@@ -164,16 +176,13 @@ int stm32loader::BootLoader::stm32_send_go_command() {
 //	WaitForAnswer(fileDescriptorUART);
 //	read(fileDescriptorUART, &readBuffer, BUFFSIZE - 1);
 
-	comPort->receiveData(readBuffer, &buffsize);
+    comPort->receiveData(readBuffer, &buffsize);
 
-	return isAcknowdledge(readBuffer[0]) == true ?
-			Communication::STM32_OK : Communication::STM32_COMM_ERROR;
+    return isAcknowdledge(readBuffer[0]) == true ?
+           Communication::STM32_OK : Communication::STM32_COMM_ERROR;
 }
 
-int stm32loader::BootLoader::stm32_Write_Image(char* image, int16_t size){
-
-
-}
+int stm32loader::BootLoader::stm32_Write_Image(char* image, int16_t size){}
 
 //int stm32_write_flash( p_read_data read_data_func, p_progress progress_func )
 //{
