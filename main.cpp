@@ -17,7 +17,7 @@ int main(int argc, const char** argv)
     stm32loader::BootLoader* bootloader = new stm32loader::BootLoader(&LinuxComPort);
     result = bootloader->stm32_init();
 
-    if ((result == Communication::STM32_INIT_ERROR) || (result == Communication::STM32_COMM_ERROR)) {
+    if ((result == stm32loader::STM32_INIT_ERROR) || (result == stm32loader::STM32_COMM_ERROR)) {
         printf("error at init: %d \n", result);
     }
 
@@ -30,7 +30,7 @@ int main(int argc, const char** argv)
     errorCode = bootloader->stm32_send_go_command();
     printf("result go: %x \n", errorCode);
 
-    if (result == Communication::STM32_INIT_ERROR) {
+    if (result == stm32loader::STM32_INIT_ERROR) {
         errorCode = errno;
         printf("Init error: %d \n", errorCode);
     } else {

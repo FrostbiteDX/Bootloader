@@ -1,3 +1,6 @@
+#ifndef __LINCOMPORT_H__
+#define __LINCOMPORT_H__
+
 #include <cstdio>
 #include <cstring>
 #include "termios.h"
@@ -14,19 +17,22 @@ class LinuxComPort :
 {
 private:
     struct termios serPortSettings;
-    uint fileDescriptor;
-    size_t comPortStatus = -1;
-    const speed_t BAUDRATE = B38400;
+    int fileDescriptor = -1;
+    int comPortStatus = -1;
+	static const constexpr uint BUFFSIZE = 256;
+    static const constexpr speed_t BAUDRATE = B38400;
 
-    size_t sendByte(char data, bool sendInverted = false);
+    int sendByte(char data, bool sendInverted = false);
 public:
-    LinuxComPort(const char* portName);
+//    LinuxComPort(const char* portName);
     const LinuxComPort& operator=(const LinuxComPort& right);
 
-    virtual size_t sendData(const char* buffer, const size_t length);
-    virtual size_t receiveData(char* buffer, size_t* length);
-    virtual size_t getComPortStatus();
-    virtual size_t close();
-    virtual size_t getBuffSize(){ return COMPort::BUFFSIZE; };
+    virtual int sendData(const char* buffer, const size_t length);
+    virtual int receiveData(char* buffer, size_t* length);
+    virtual int getComPortStatus();
+    virtual int close();
+    virtual int getBuffSize(){ return BUFFSIZE; };
 };
 }
+
+#endif

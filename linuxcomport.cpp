@@ -18,13 +18,13 @@ void WaitForAnswer(int fileDescriptor)
     select(fileDescriptor, &rfds, NULL, NULL, &timeout);
 }
 
-size_t linuxComPort::LinuxComPort::sendData(const char* buffer, const size_t length)
+int linuxComPort::LinuxComPort::sendData(const char* buffer, const size_t length)
 {
-    size_t count = write(fileDescriptor, buffer, length);
-    return count == length;
+	ssize_t count = write(fileDescriptor, buffer, length);
+    return count == (ssize_t)length;
 }
 
-size_t linuxComPort::LinuxComPort::sendByte(char data, bool sendInverted)
+int linuxComPort::LinuxComPort::sendByte(char data, bool sendInverted)
 {
     uint count = 0;
 
@@ -39,18 +39,18 @@ size_t linuxComPort::LinuxComPort::sendByte(char data, bool sendInverted)
     return count > 0;
 }
 
-size_t linuxComPort::LinuxComPort::close()
+int linuxComPort::LinuxComPort::close()
 {
     fileDescriptor = -1;
     return true;
 }
 
-size_t linuxComPort::LinuxComPort::getComPortStatus()
+int linuxComPort::LinuxComPort::getComPortStatus()
 {
     return fileDescriptor > 0;
 }
 
-size_t linuxComPort::LinuxComPort::receiveData(char* buffer, size_t* length)
+int linuxComPort::LinuxComPort::receiveData(char* buffer, size_t* length)
 {
     //WaitForAnswer(fileDescriptor);
     ssize_t res = read(fileDescriptor, buffer, (unsigned long)*length);
