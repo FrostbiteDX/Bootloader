@@ -5,13 +5,41 @@
 #include <iostream>
 #include "communication.h"
 #include "linuxcomport.h"
+#include <fstream>
+
+int loadfile(char* path, char* content, int32_t* size)
+{
+	int success = -1;
+	std::streampos begin, end;
+
+	std::ifstream imageFile(path);
+	begin = imageFile.tellg();
+	imageFile.seekg(0, std::ios::end);
+	end = imageFile.tellg();
+
+	*size = end - begin;
+
+	if(imageFile.is_open())
+	{
+		int readSize = imageFile.read(content, *size);
+		success = (readSize == *size ? -1 : 1);
+	}
+	return success;
+}
 
 int main(int argc, const char** argv)
 {
     int errorCode = 0, result = -1, chipid = 0;
     float version = -1;
 
+    char* filename;
+    char* content;
+    int filesize;
+
     printf("params: <serialport> <hexfile> \n");
+
+    loadfile(filename, content, &filesize);
+
 
     linuxComPort::LinuxComPort LinuxComPort("/dev/ttyUSB0");
     stm32loader::BootLoader* bootloader = new stm32loader::BootLoader(&LinuxComPort);

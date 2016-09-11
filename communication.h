@@ -10,9 +10,6 @@ namespace Communication
 class COMPort
 {
 public:
-//	COMPort();
-//    const COMPort& operator=(const COMPort& right);
-
     virtual int sendData(const char* buffer, const size_t length) = 0;
     virtual int receiveData(char* buffer, size_t* length) = 0;
     virtual int getComPortStatus() = 0;

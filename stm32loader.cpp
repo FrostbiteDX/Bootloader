@@ -23,10 +23,22 @@ int stm32loader::BootLoader::sendCommand(Commands Command, bool sendInverted)
 {
     char commandArray[] = {(char)Command, (char)(~Command)};
     if (sendInverted) {
-        return comPort->sendData(commandArray, 2);
+        return comPort->sendData(commandArray, 2) == 2;
     } else {
-        return comPort->sendData(commandArray, 1);
+        return comPort->sendData(commandArray, 1) == 1;
     }
+}
+
+int stm32loader::BootLoader::sendAddress(int32_t address)
+{
+    char data[5] = {'\0' };
+
+    data[1] = (address >> 24) & 0xFF;
+    data[2] = (address >> 16) & 0xFF;
+    data[3] = (address >> 8) & 0xFF;
+    data[4] = (address >> 0) & 0xFF;
+    data[5] = data[1] ^ data[2] ^ data[3] ^ data[4]; // Checksum
+    return comPort->sendData(data, 5) == 5;
 }
 
 int stm32loader::BootLoader::stm32_init()
@@ -68,6 +80,7 @@ int stm32loader::BootLoader::stm32_erase_flash(void)
                 result = true;
                 break;
             }
+            readBuffer[0] = '\0';
         }
     }
 
@@ -161,13 +174,16 @@ int stm32loader::BootLoader::stm32_send_go_command()
     if (!isAcknowdledge(readBuffer[0])) {
         return STM32_COMM_ERROR;
     }
+    readBuffer[0] = '\0';
 
-    data[1] = (adress >> 24) & 0xFF;
-    data[2] = (adress >> 16) & 0xFF;
-    data[3] = (adress >> 8) & 0xFF;
-    data[4] = (adress >> 0) & 0xFF;
-    data[5] = data[1] ^ data[2] ^ data[3] ^ data[4]; // Checksum
-    comPort->sendData(data, 5);
+    sendAddress(adress);
+
+//    data[1] = (adress >> 24) & 0xFF;
+//    data[2] = (adress >> 16) & 0xFF;
+//    data[3] = (adress >> 8) & 0xFF;
+//    data[4] = (adress >> 0) & 0xFF;
+//    data[5] = data[1] ^ data[2] ^ data[3] ^ data[4]; // Checksum
+//    comPort->sendData(data, 5);
 
 //	sendByte(fileDescriptorUART, B2);
 //	sendByte(fileDescriptorUART, B3);
@@ -182,10 +198,71 @@ int stm32loader::BootLoader::stm32_send_go_command()
            STM32_OK : STM32_COMM_ERROR;
 }
 
-int stm32loader::BootLoader::stm32_Write_Image(char* image, int16_t size)
+int stm32loader::BootLoader::stm32_Write_Image(char* image, int32_t size, int32_t address, void* updateprogress)
 {
+    size_t buffsize = comPort->getBuffSize();
+    char readBuffer[buffsize] = { '\0' };
 
+    unsigned long int currAddress = address;
+
+    const char maxWriteSize = 255;
+    const int16_t totalSize = maxWriteSize + 1;
+    char writeBuffer[totalSize] = { '\0' };
+    char checkSum = 0, stepWriteSize = maxWriteSize;
+
+	for(int i = 0; i < size; i += stepWriteSize)
+	{
+		if ((size - i) < maxWriteSize)			// If image size is not an exact multiple of maxWriteSize
+		{
+			stepWriteSize = size - i;
+		}
+
+		sendCommand(Commands::STM32_CMD_WRITE_FLASH);
+		comPort->receiveData(readBuffer, &buffsize);
+		if (!isAcknowdledge(readBuffer[0])) {
+			return STM32_COMM_ERROR;
+		}
+	    readBuffer[0] = '\0';
+
+
+	    sendAddress(currAddress);
+		comPort->receiveData(readBuffer, &buffsize);
+		if (!isAcknowdledge(readBuffer[0])) {
+			return STM32_COMM_ERROR;
+		}
+	    readBuffer[0] = '\0';
+
+
+	    for (int j = 0; j < stepWriteSize; j++) {
+	    	checkSum ^= image[j];
+	    }
+
+	    comPort->sendData(&stepWriteSize, 1);
+	    comPort->sendData(&(image[i]), stepWriteSize);
+	    comPort->sendData(&checkSum, 1);
+
+		comPort->receiveData(readBuffer, &buffsize);
+		if (!isAcknowdledge(readBuffer[0])) {
+			return STM32_COMM_ERROR;
+		}
+	    readBuffer[0] = '\0';
+	}
+
+	return STM32_OK;
 }
+
+//static int stm32h_send_packet_with_checksum( u8 *packet, u32 len )
+//{
+//  u8 chksum = 0;
+//  u32 i;
+//
+//  for( i = 0; i < len; i ++ )
+//    chksum ^= packet[ i ];
+//  ser_write( stm32_ser_id, packet, len );
+//  ser_write_byte( stm32_ser_id, chksum );
+//  return STM32_OK;
+//}
+
 
 //int stm32_write_flash( p_read_data read_data_func, p_progress progress_func )
 //{

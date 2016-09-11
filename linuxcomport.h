@@ -24,7 +24,7 @@ private:
 
     int sendByte(char data, bool sendInverted = false);
 public:
-//    LinuxComPort(const char* portName);
+    LinuxComPort(const char* portName);
     const LinuxComPort& operator=(const LinuxComPort& right);
 
     virtual int sendData(const char* buffer, const size_t length);
