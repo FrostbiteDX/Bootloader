@@ -33,11 +33,11 @@ int stm32loader::BootLoader::sendAddress(int32_t address)
 {
     char data[5] = {'\0' };
 
-    data[1] = (address >> 24) & 0xFF;
-    data[2] = (address >> 16) & 0xFF;
-    data[3] = (address >> 8) & 0xFF;
-    data[4] = (address >> 0) & 0xFF;
-    data[5] = data[1] ^ data[2] ^ data[3] ^ data[4]; // Checksum
+    data[0] = (address >> 24) & 0xFF;
+    data[1] = (address >> 16) & 0xFF;
+    data[2] = (address >> 8) & 0xFF;
+    data[3] = (address >> 0) & 0xFF;
+    data[4] = data[0] ^ data[1] ^ data[2] ^ data[3]; // Checksum
     return comPort->sendData(data, 5) == 5;
 }
 
@@ -165,7 +165,6 @@ int stm32loader::BootLoader::stm32_send_go_command()
 {
     size_t buffsize = comPort->getBuffSize();
     char readBuffer[buffsize] = { '\0' };
-    char data[5];
     int32_t adress = STM32_FLASH_START_ADDRESS;
 
     sendCommand(STM32_CMD_GO);
@@ -177,20 +176,6 @@ int stm32loader::BootLoader::stm32_send_go_command()
     readBuffer[0] = '\0';
 
     sendAddress(adress);
-
-//    data[1] = (adress >> 24) & 0xFF;
-//    data[2] = (adress >> 16) & 0xFF;
-//    data[3] = (adress >> 8) & 0xFF;
-//    data[4] = (adress >> 0) & 0xFF;
-//    data[5] = data[1] ^ data[2] ^ data[3] ^ data[4]; // Checksum
-//    comPort->sendData(data, 5);
-
-//	sendByte(fileDescriptorUART, B2);
-//	sendByte(fileDescriptorUART, B3);
-//	sendByte(fileDescriptorUART, B4);
-//	sendByte(fileDescriptorUART, checksum);
-//	WaitForAnswer(fileDescriptorUART);
-//	read(fileDescriptorUART, &readBuffer, BUFFSIZE - 1);
 
     comPort->receiveData(readBuffer, &buffsize);
 
@@ -204,19 +189,17 @@ int stm32loader::BootLoader::stm32_Write_Image(char* image, int32_t size, int32_
     char readBuffer[buffsize] = { '\0' };
 
     unsigned long int currAddress = address;
-
-    const char maxWriteSize = 255;
-    const int16_t totalSize = maxWriteSize + 1;
-    char writeBuffer[totalSize] = { '\0' };
-    char checkSum = 0, stepWriteSize = maxWriteSize;
+    int16_t stepWriteSize = STM32_MAX_WRITE_SIZE;
+    char checkSum = 0;
 
 	for(int i = 0; i < size; i += stepWriteSize)
 	{
-		if ((size - i) < maxWriteSize)			// If image size is not an exact multiple of maxWriteSize
+		if ( (size - i) < stepWriteSize)			// If image size is not an exact multiple of maxWriteSize
 		{
 			stepWriteSize = size - i;
 		}
 
+		// Send Write Memory Command - prepare programming
 		sendCommand(Commands::STM32_CMD_WRITE_FLASH);
 		comPort->receiveData(readBuffer, &buffsize);
 		if (!isAcknowdledge(readBuffer[0])) {
@@ -225,6 +208,7 @@ int stm32loader::BootLoader::stm32_Write_Image(char* image, int32_t size, int32_
 	    readBuffer[0] = '\0';
 
 
+	    // Send Memory Address to program
 	    sendAddress(currAddress);
 		comPort->receiveData(readBuffer, &buffsize);
 		if (!isAcknowdledge(readBuffer[0])) {
@@ -233,15 +217,20 @@ int stm32loader::BootLoader::stm32_Write_Image(char* image, int32_t size, int32_
 	    readBuffer[0] = '\0';
 
 
+	    // Calc XOR-Checksum for N (amount of bytes) and N + 1 data bytes
+	    char stm32_N = stepWriteSize - 1;
+	    checkSum = stm32_N;
 	    for (int j = 0; j < stepWriteSize; j++) {
-	    	checkSum ^= image[j];
+	    	checkSum ^= image[j + i];			// i for offset
 	    }
 
-	    comPort->sendData(&stepWriteSize, 1);
-	    comPort->sendData(&(image[i]), stepWriteSize);
-	    comPort->sendData(&checkSum, 1);
+	    comPort->sendData(&stm32_N, 1);					// 3
+//	    comPort->sendData(&stepWriteSize, 1);
+	    comPort->sendData(&(image[i]), stepWriteSize); 	// 0, 1, 2
+	    comPort->sendData(&checkSum, 1);				// 0
 
 		comPort->receiveData(readBuffer, &buffsize);
+		char help = readBuffer[0];
 		if (!isAcknowdledge(readBuffer[0])) {
 			return STM32_COMM_ERROR;
 		}

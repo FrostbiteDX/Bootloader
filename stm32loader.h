@@ -43,7 +43,9 @@ private:
     // Communication data
     static constexpr char STM32_COMM_ACK = 0x79;
     static constexpr char STM32_COMM_NACK = 0x1F;
-    int32_t STM32_FLASH_START_ADDRESS = 0x08000000;
+    static constexpr int16_t STM32_MAX_WRITE_SIZE = 256;
+//    int32_t STM32_FLASH_START_ADDRESS = 0x08000000;
+	int32_t STM32_FLASH_START_ADDRESS = 0x07000000; 	// For testing only!
     //			#define STM32_COMM_TIMEOUT  2000000
 
     int stm32_disable_writeprotection();

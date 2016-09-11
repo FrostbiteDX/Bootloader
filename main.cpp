@@ -7,25 +7,25 @@
 #include "linuxcomport.h"
 #include <fstream>
 
-int loadfile(char* path, char* content, int32_t* size)
-{
-	int success = -1;
-	std::streampos begin, end;
-
-	std::ifstream imageFile(path);
-	begin = imageFile.tellg();
-	imageFile.seekg(0, std::ios::end);
-	end = imageFile.tellg();
-
-	*size = end - begin;
-
-	if(imageFile.is_open())
-	{
-		int readSize = imageFile.read(content, *size);
-		success = (readSize == *size ? -1 : 1);
-	}
-	return success;
-}
+//int loadfile(char* path, char* content, int32_t* size)
+//{
+//	int success = -1;
+//	std::streampos begin, end;
+//
+//	std::ifstream imageFile(path);
+//	begin = imageFile.tellg();
+//	imageFile.seekg(0, std::ios::end);
+//	end = imageFile.tellg();
+//
+//	*size = end - begin;
+//
+//	if(imageFile.is_open())
+//	{
+//		int readSize = imageFile.read(content, *size);
+//		success = (readSize == *size ? -1 : 1);
+//	}
+//	return success;
+//}
 
 int main(int argc, const char** argv)
 {
@@ -36,9 +36,18 @@ int main(int argc, const char** argv)
     char* content;
     int filesize;
 
+//    char testarray[5] = {'0', '1', '2', '3', '4', '5', '6' };
+//    filesize = 7;
+
+//    char testarray[3] = {0, 1, 2 };
+//	  filesize = 3;
+
+	char testarray[1] = {0};
+	filesize = 1;
+
     printf("params: <serialport> <hexfile> \n");
 
-    loadfile(filename, content, &filesize);
+//    loadfile(filename, content, &filesize);
 
 
     linuxComPort::LinuxComPort LinuxComPort("/dev/ttyUSB0");
@@ -52,11 +61,13 @@ int main(int argc, const char** argv)
     bootloader->stm32_get_bootloader_version(&version);
     printf("Bootloader Version: %f \n", version);
 
-    bootloader->stm32_get_chip_id(&chipid);
-    printf("Chip ID: %d \n", chipid);
+//    bootloader->stm32_get_chip_id(&chipid);
+//    printf("Chip ID: %d \n", chipid);
 
-    errorCode = bootloader->stm32_send_go_command();
-    printf("result go: %x \n", errorCode);
+    result = bootloader->stm32_Write_Image(testarray, filesize, 0x08000000, NULL);
+
+//    errorCode = bootloader->stm32_send_go_command();
+//    printf("result go: %x \n", errorCode);
 
     if (result == stm32loader::STM32_INIT_ERROR) {
         errorCode = errno;
