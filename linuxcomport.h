@@ -19,7 +19,7 @@ private:
     struct termios serPortSettings;
     int fileDescriptor = -1;
     int comPortStatus = -1;
-	static const constexpr uint BUFFSIZE = 256;
+	static const constexpr int16_t BUFFSIZE = 256;
     static const constexpr speed_t BAUDRATE = B38400;
 
     int sendByte(char data, bool sendInverted = false);

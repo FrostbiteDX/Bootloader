@@ -224,10 +224,9 @@ int stm32loader::BootLoader::stm32_Write_Image(char* image, int32_t size, int32_
 	    	checkSum ^= image[j + i];			// i for offset
 	    }
 
-	    comPort->sendData(&stm32_N, 1);					// 3
-//	    comPort->sendData(&stepWriteSize, 1);
-	    comPort->sendData(&(image[i]), stepWriteSize); 	// 0, 1, 2
-	    comPort->sendData(&checkSum, 1);				// 0
+	    comPort->sendData(&stm32_N, 1);
+	    comPort->sendData(&(image[i]), stepWriteSize);
+	    comPort->sendData(&checkSum, 1);
 
 		comPort->receiveData(readBuffer, &buffsize);
 		char help = readBuffer[0];
@@ -289,3 +288,51 @@ int stm32loader::BootLoader::stm32_Write_Image(char* image, int32_t size, int32_
 //  }
 //  return STM32_OK;
 //}
+
+
+
+int stm32loader::BootLoader::stm32_Read_Image(char* image, int32_t* size, int32_t address)
+{
+    size_t buffsize = comPort->getBuffSize();
+    char readBuffer[buffsize] = { '\0' };
+
+	if (size <= 0)
+	{
+		image[0] = '\0';
+		return -1;
+	}
+
+    sendCommand(Commands::STM32_CMD_READ_FLASH);
+	comPort->receiveData(readBuffer, &buffsize);
+	if (!isAcknowdledge(readBuffer[0])) {
+		return STM32_COMM_ERROR;
+	}
+	readBuffer[0] = '\0';
+
+	// Send Memory Address to read
+	sendAddress(address);
+	comPort->receiveData(readBuffer, &buffsize);
+	if (!isAcknowdledge(readBuffer[0])) {
+		return STM32_COMM_ERROR;
+	}
+	readBuffer[0] = '\0';
+
+	// Send Memory size to receive
+	sendCommand((stm32loader::Commands)(*size - 1));
+	comPort->receiveData(readBuffer, &buffsize);
+	if (!isAcknowdledge(readBuffer[0])) {
+		return STM32_COMM_ERROR;
+	}
+	readBuffer[0] = '\0';
+
+	// Receive data
+	comPort->receiveData(readBuffer, &buffsize);
+
+	// copy into image
+	memcpy(image, readBuffer, *size);
+
+	return STM32_OK;
+
+}
+
+

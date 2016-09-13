@@ -36,19 +36,12 @@ int main(int argc, const char** argv)
     char* content;
     int filesize;
 
-//    char testarray[5] = {'0', '1', '2', '3', '4', '5', '6' };
-//    filesize = 7;
-
-//    char testarray[3] = {0, 1, 2 };
-//	  filesize = 3;
-
-	char testarray[1] = {0};
-	filesize = 1;
+    char testarray[7] = {'0', '1', '2', '3', '4', '5', '6' };
+    filesize = 7;
 
     printf("params: <serialport> <hexfile> \n");
 
 //    loadfile(filename, content, &filesize);
-
 
     linuxComPort::LinuxComPort LinuxComPort("/dev/ttyUSB0");
     stm32loader::BootLoader* bootloader = new stm32loader::BootLoader(&LinuxComPort);
@@ -58,21 +51,41 @@ int main(int argc, const char** argv)
         printf("error at init: %d \n", result);
     }
 
+    if (result == stm32loader::STM32_INIT_ERROR) {
+		errorCode = errno;
+		printf("Init error: %d \n", errorCode);
+	} else {
+		bootloader->stm32_exit();
+	}
+
     bootloader->stm32_get_bootloader_version(&version);
     printf("Bootloader Version: %f \n", version);
 
-//    bootloader->stm32_get_chip_id(&chipid);
-//    printf("Chip ID: %d \n", chipid);
+    bootloader->stm32_get_chip_id(&chipid);
+    printf("Chip ID: %d \n", chipid);
 
-    result = bootloader->stm32_Write_Image(testarray, filesize, 0x08000000, NULL);
+//    result = bootloader->stm32_Write_Image(testarray, filesize, 0x08000000, NULL);
 
-//    errorCode = bootloader->stm32_send_go_command();
-//    printf("result go: %x \n", errorCode);
 
-    if (result == stm32loader::STM32_INIT_ERROR) {
-        errorCode = errno;
-        printf("Init error: %d \n", errorCode);
+    if (result != stm32loader::STM32_OK) {
+        errorCode = result;
+        printf("Error: %d \n", errorCode);
     } else {
-        bootloader->stm32_exit();
+        printf("Success writing Image");
+
+		for (int i = 0; i < filesize; i++)
+		{
+			testarray[i] = 0;
+		}
+
+        result = bootloader->stm32_Read_Image(testarray, &filesize, 0x08000000);
+
+        printf("Gelesen: \"%s\"", testarray);
+
+
+        errorCode = bootloader->stm32_send_go_command();
+        printf("result go: %x \n", errorCode);
     }
+
+	bootloader->stm32_exit();
 }
