@@ -1,5 +1,4 @@
 /*
- * Communication.cpp
  *
  *  Created on: 27.04.2016
  *      Author: Alexander Strobl
@@ -7,7 +6,7 @@
 
 #include "linuxcomport.h"
 
-void WaitForAnswer(int fileDescriptor)
+void WaitForAnswer(int16_t fileDescriptor)
 {
     fd_set rfds;
     FD_ZERO(&rfds);
@@ -18,17 +17,17 @@ void WaitForAnswer(int fileDescriptor)
     select(fileDescriptor, &rfds, NULL, NULL, &timeout);
 }
 
-int linuxComPort::LinuxComPort::sendData(const char* buffer, const size_t length)
+uint8_t linuxComPort::LinuxComPort::sendData(const uint8_t* buffer, const size_t length)
 {
 	ssize_t count = write(fileDescriptor, buffer, length);
     return count == (ssize_t)length;
 }
 
-int linuxComPort::LinuxComPort::sendByte(char data, bool sendInverted)
+uint8_t linuxComPort::LinuxComPort::sendByte(uint8_t data, bool sendInverted)
 {
-    uint count = 0;
+    uint8_t count = 0;
 
-    char c[] = { (char)data, (char)~data };
+    uint8_t c[] = { (uint8_t)data, (uint8_t)~data };
 
     if (sendInverted) {
         count += write(fileDescriptor, c, 2);
@@ -39,18 +38,18 @@ int linuxComPort::LinuxComPort::sendByte(char data, bool sendInverted)
     return count > 0;
 }
 
-int linuxComPort::LinuxComPort::close()
+uint8_t linuxComPort::LinuxComPort::close()
 {
     fileDescriptor = -1;
     return true;
 }
 
-int linuxComPort::LinuxComPort::getComPortStatus()
+uint8_t linuxComPort::LinuxComPort::getComPortStatus()
 {
     return fileDescriptor > 0;
 }
 
-int linuxComPort::LinuxComPort::receiveData(char* buffer, size_t* length)
+uint8_t linuxComPort::LinuxComPort::receiveData(uint8_t* buffer, size_t* length)
 {
     //WaitForAnswer(fileDescriptor);
     ssize_t res = read(fileDescriptor, buffer, (unsigned long)*length);
@@ -61,7 +60,7 @@ int linuxComPort::LinuxComPort::receiveData(char* buffer, size_t* length)
 
 linuxComPort::LinuxComPort::LinuxComPort(const char* portName)
 {
-    int port = open(portName, O_RDWR);
+    int16_t port = open(portName, O_RDWR);
     if (port < 0) {
         printf("open serial port %s failed: error: %d", portName, errno);
         comPortStatus = port;

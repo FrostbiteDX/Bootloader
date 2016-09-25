@@ -29,14 +29,15 @@
 
 int main(int argc, const char** argv)
 {
-    int errorCode = 0, result = -1, chipid = 0;
-    float version = -1;
+    int errorCode = 0, result = -1;
+    uint32_t chipid = 0;
+    std::pair<uint8_t, uint8_t> version;
 
-    char* filename;
-    char* content;
-    int filesize;
+//    uint8_t* filename;
+//    uint8_t* content;
+    uint32_t filesize;
 
-    char testarray[7] = {'0', '1', '2', '3', '4', '5', '6' };
+    uint8_t testarray[7] = {'0', '1', '2', '3', '4', '5', '6' };
     filesize = 7;
 
     printf("params: <serialport> <hexfile> \n");
@@ -59,12 +60,12 @@ int main(int argc, const char** argv)
 	}
 
     bootloader->stm32_get_bootloader_version(&version);
-    printf("Bootloader Version: %f \n", version);
+    printf("Bootloader Version: %d.%d \n", version.first, version.second);
 
-    bootloader->stm32_get_chip_id(&chipid);
-    printf("Chip ID: %d \n", chipid);
+    bootloader->stm32_get_chip_id(&version);
+    printf("Chip ID: %d.%d  \n", version.first, version.second);
 
-//    result = bootloader->stm32_Write_Image(testarray, filesize, 0x08000000, NULL);
+    result = bootloader->stm32_Write_Image(testarray, filesize, bootloader->stm32_get_default_write_address(), NULL);
 
 
     if (result != stm32loader::STM32_OK) {
@@ -73,7 +74,7 @@ int main(int argc, const char** argv)
     } else {
         printf("Success writing Image");
 
-		for (int i = 0; i < filesize; i++)
+		for (uint32_t i = 0; i < filesize; i++)
 		{
 			testarray[i] = 0;
 		}

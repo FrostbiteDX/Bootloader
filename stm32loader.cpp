@@ -1,11 +1,11 @@
 #include "stm32loader.h"
 
-char stm32loader::BootLoader::getACKByte()
+uint8_t stm32loader::BootLoader::getACKByte()
 {
     return STM32_COMM_ACK;
 }
 
-char stm32loader::BootLoader::getNACKByte()
+uint8_t stm32loader::BootLoader::getNACKByte()
 {
     return STM32_COMM_NACK;
 }
@@ -19,31 +19,31 @@ bool stm32loader::BootLoader::isAcknowdledge(int res)
     return ret;
 }
 
-int stm32loader::BootLoader::sendCommand(Commands Command, bool sendInverted)
+uint8_t stm32loader::BootLoader::sendCommand(Commands Command, bool sendInverted)
 {
-    char commandArray[] = {(char)Command, (char)(~Command)};
+    uint8_t commandArray[] = {(uint8_t)Command, (uint8_t)(~Command)};
     if (sendInverted) {
-        return comPort->sendData(commandArray, 2) == 2;
+        return comPort->sendData(commandArray, 2) == 2 ? STM32_OK : STM32_COMM_ERROR;
     } else {
-        return comPort->sendData(commandArray, 1) == 1;
+        return comPort->sendData(commandArray, 1) == 1 ? STM32_OK : STM32_COMM_ERROR;
     }
 }
 
-int stm32loader::BootLoader::sendAddress(int32_t address)
+uint8_t stm32loader::BootLoader::sendAddress(int32_t address)
 {
-    char data[5] = {'\0' };
+    uint8_t data[5] = {'\0' };
 
     data[0] = (address >> 24) & 0xFF;
     data[1] = (address >> 16) & 0xFF;
     data[2] = (address >> 8) & 0xFF;
     data[3] = (address >> 0) & 0xFF;
     data[4] = data[0] ^ data[1] ^ data[2] ^ data[3]; // Checksum
-    return comPort->sendData(data, 5) == 5;
+    return comPort->sendData(data, 5) == 5 ? STM32_OK : STM32_COMM_ERROR;
 }
 
-int stm32loader::BootLoader::stm32_init()
+uint8_t stm32loader::BootLoader::stm32_init()
 {
-    char readBuffer[comPort->getBuffSize()] = { '\0' };
+    uint8_t readBuffer[comPort->getBuffSize()] = { '\0' };
     size_t len = comPort->getBuffSize();
 
     sendCommand(stm32loader::STM32_CMD_INIT, false);
@@ -59,11 +59,11 @@ int stm32loader::BootLoader::stm32_init()
     		STM32_OK : STM32_INIT_ERROR;
 }
 
-int stm32loader::BootLoader::stm32_erase_flash(void)
+uint8_t stm32loader::BootLoader::stm32_erase_flash(void)
 {
     size_t buffsize = comPort->getBuffSize();
-    char readBuffer[buffsize] = { '\0' };
-    char tries = 2;
+    uint8_t readBuffer[buffsize] = { '\0' };
+    uint8_t tries = 2;
     bool result = false;
 
     sendCommand(STM32_CMD_ERASE_FLASH);
@@ -92,10 +92,10 @@ void stm32loader::BootLoader::stm32_exit()
     comPort->close();
 }
 
-int stm32loader::BootLoader::stm32_get_commands()
+uint8_t stm32loader::BootLoader::stm32_get_commands()
 {
     size_t buffsize = comPort->getBuffSize();
-    char readBuffer[buffsize] = { '\0' };
+    uint8_t readBuffer[buffsize] = { '\0' };
     sendCommand(STM32_CMD_GET_COMMANDS);
     comPort->receiveData(readBuffer, &buffsize);
 
@@ -106,10 +106,10 @@ int stm32loader::BootLoader::stm32_get_commands()
     return STM32_OK;
 }
 
-int stm32loader::BootLoader::stm32_get_bootloader_version(float* version)
+uint8_t stm32loader::BootLoader::stm32_get_bootloader_version(std::pair<uint8_t, uint8_t>* version)
 {
     size_t buffsize = comPort->getBuffSize();
-    char readBuffer[buffsize] = { '\0' };
+    uint8_t readBuffer[buffsize] = { '\0' };
 
     sendCommand(STM32_CMD_GET_BL_VERSION);
     comPort->receiveData(readBuffer, &buffsize);
@@ -118,20 +118,16 @@ int stm32loader::BootLoader::stm32_get_bootloader_version(float* version)
         return STM32_COMM_ERROR;
     }
 
-    *version = (float)((readBuffer[1] & 0xF0) >> 4);
-    float minor = readBuffer[1] & 0x0F;
-    while (minor >= 1) {
-        minor /= 10;
-    }
-    *version += minor;
+    version->first = (readBuffer[1] & 0xF0) >> 4;
+    version->second = (readBuffer[1] & 0x0F);
 
     return STM32_OK;
 }
 
-int stm32loader::BootLoader::stm32_get_chip_id(int32_t* version)
+uint8_t stm32loader::BootLoader::stm32_get_chip_id(std::pair<uint8_t, uint8_t>* version)
 {
     size_t buffsize = comPort->getBuffSize();
-    char readBuffer[buffsize] = { '\0' };
+    uint8_t readBuffer[buffsize] = { '\0' };
     sendCommand(STM32_CMD_GET_CHIP_ID);
 
     comPort->receiveData(readBuffer, &buffsize);
@@ -140,31 +136,27 @@ int stm32loader::BootLoader::stm32_get_chip_id(int32_t* version)
         return STM32_COMM_ERROR;
     }
 
-    uint major = readBuffer[2], minor = readBuffer[3];
-    uint c = ((major & 0xF0) >> 4) * 1000;
-    c += (major & 0x0F) * 100;
-    c += ((minor & 0xF0) >> 4) * 10;
-    c += minor & 0x0F;
-    *version = c;
+    version->first = readBuffer[2];
+    version->second = readBuffer[3];
 
     return STM32_OK;
 }
 
-int stm32loader::BootLoader::stm32_disable_writeprotection()
+uint8_t stm32loader::BootLoader::stm32_disable_writeprotection()
 {
     size_t buffsize = comPort->getBuffSize();
-    char readBuffer[buffsize] = { '\0' };
+    uint8_t readBuffer[buffsize] = { '\0' };
     sendCommand(STM32_CMD_WRITE_UNPROTECT);
 
     comPort->receiveData(readBuffer, &buffsize);
 
-    return isAcknowdledge(readBuffer[0]) && isAcknowdledge(readBuffer[1]);
+    return isAcknowdledge(readBuffer[0]) && isAcknowdledge(readBuffer[1]) ? STM32_OK : STM32_COMM_ERROR;
 }
 
-int stm32loader::BootLoader::stm32_send_go_command()
+uint8_t stm32loader::BootLoader::stm32_send_go_command()
 {
     size_t buffsize = comPort->getBuffSize();
-    char readBuffer[buffsize] = { '\0' };
+    uint8_t readBuffer[buffsize] = { '\0' };
     int32_t adress = STM32_FLASH_START_ADDRESS;
 
     sendCommand(STM32_CMD_GO);
@@ -183,16 +175,16 @@ int stm32loader::BootLoader::stm32_send_go_command()
            STM32_OK : STM32_COMM_ERROR;
 }
 
-int stm32loader::BootLoader::stm32_Write_Image(char* image, int32_t size, int32_t address, void* updateprogress)
+uint8_t stm32loader::BootLoader::stm32_Write_Image(uint8_t* image, uint32_t size, uint32_t address, void* updateprogress)
 {
     size_t buffsize = comPort->getBuffSize();
-    char readBuffer[buffsize] = { '\0' };
+    uint8_t readBuffer[buffsize] = { '\0' };
 
     unsigned long int currAddress = address;
-    int16_t stepWriteSize = STM32_MAX_WRITE_SIZE;
-    char checkSum = 0;
+    uint16_t stepWriteSize = STM32_MAX_WRITE_SIZE;
+    uint8_t checkSum = 0;
 
-	for(int i = 0; i < size; i += stepWriteSize)
+	for(uint32_t i = 0; i < size; i += stepWriteSize)
 	{
 		if ( (size - i) < stepWriteSize)			// If image size is not an exact multiple of maxWriteSize
 		{
@@ -218,7 +210,7 @@ int stm32loader::BootLoader::stm32_Write_Image(char* image, int32_t size, int32_
 
 
 	    // Calc XOR-Checksum for N (amount of bytes) and N + 1 data bytes
-	    char stm32_N = stepWriteSize - 1;
+	    uint8_t stm32_N = stepWriteSize - 1;
 	    checkSum = stm32_N;
 	    for (int j = 0; j < stepWriteSize; j++) {
 	    	checkSum ^= image[j + i];			// i for offset
@@ -229,7 +221,7 @@ int stm32loader::BootLoader::stm32_Write_Image(char* image, int32_t size, int32_
 	    comPort->sendData(&checkSum, 1);
 
 		comPort->receiveData(readBuffer, &buffsize);
-		char help = readBuffer[0];
+//		uint8_t help = readBuffer[0];
 		if (!isAcknowdledge(readBuffer[0])) {
 			return STM32_COMM_ERROR;
 		}
@@ -291,10 +283,10 @@ int stm32loader::BootLoader::stm32_Write_Image(char* image, int32_t size, int32_
 
 
 
-int stm32loader::BootLoader::stm32_Read_Image(char* image, int32_t* size, int32_t address)
+uint8_t stm32loader::BootLoader::stm32_Read_Image(uint8_t* image, uint32_t* size, uint32_t address)
 {
     size_t buffsize = comPort->getBuffSize();
-    char readBuffer[buffsize] = { '\0' };
+    uint8_t readBuffer[buffsize] = { '\0' };
 
 	if (size <= 0)
 	{
@@ -335,4 +327,7 @@ int stm32loader::BootLoader::stm32_Read_Image(char* image, int32_t* size, int32_
 
 }
 
-
+uint32_t stm32loader::BootLoader::stm32_get_default_write_address()
+{
+	return STM32_FLASH_START_ADDRESS;
+}

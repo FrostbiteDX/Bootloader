@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cstdint>
 #include <sys/types.h>
 
 namespace Communication
@@ -10,11 +11,11 @@ namespace Communication
 class COMPort
 {
 public:
-    virtual int sendData(const char* buffer, const size_t length) = 0;
-    virtual int receiveData(char* buffer, size_t* length) = 0;
-    virtual int getComPortStatus() = 0;
-    virtual int close() = 0;
-    virtual int getBuffSize() = 0;
+    virtual uint8_t sendData(const uint8_t* buffer, const size_t length) = 0;
+    virtual uint8_t receiveData(uint8_t* buffer, size_t* length) = 0;
+    virtual uint8_t getComPortStatus() = 0;
+    virtual uint8_t close() = 0;
+    virtual uint16_t getBuffSize() = 0;
 };
 }
 

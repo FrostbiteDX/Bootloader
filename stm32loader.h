@@ -3,12 +3,14 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cstdint>
 #include "termios.h"
 #include <unistd.h> // UNIX standard function definitions
 #include <fcntl.h> // File control definitions
 #include <errno.h> // Error number definitions
 #include <sys/types.h>
 #include "communication.h"
+#include <utility>
 
 namespace stm32loader
 {
@@ -28,11 +30,8 @@ enum Commands {
 
 enum Results {
     STM32_OK = 0,
-    STM32_PORT_OPEN_ERROR,
-    STM32_COMM_ERROR,
-    STM32_INIT_ERROR,
-    STM32_TIMEOUT_ERROR,
-    STM32_NOT_INITIALIZED_ERROR
+	STM32_INIT_ERROR,
+    STM32_COMM_ERROR
 };
 
 class BootLoader
@@ -41,31 +40,31 @@ private:
     Communication::COMPort* comPort;
 
     // Communication data
-    static constexpr char STM32_COMM_ACK = 0x79;
-    static constexpr char STM32_COMM_NACK = 0x1F;
-    static constexpr int16_t STM32_MAX_WRITE_SIZE = 256;
-    int32_t STM32_FLASH_START_ADDRESS = 0x08000000;
-    //			#define STM32_COMM_TIMEOUT  2000000
+    static constexpr uint8_t STM32_COMM_ACK = 0x79;
+    static constexpr uint8_t STM32_COMM_NACK = 0x1F;
+    static constexpr uint16_t STM32_MAX_WRITE_SIZE = 256;
+    uint32_t STM32_FLASH_START_ADDRESS = 0x08000000;
 
-    int stm32_disable_writeprotection();
-    int stm32_erase_flash();
-    int stm32_write_flash();
-    int stm32_get_commands();
-    int sendCommand(Commands Command, bool sendInverted = true);
-    int sendAddress(int32_t address);
+    uint8_t stm32_disable_writeprotection();
+    uint8_t stm32_erase_flash();
+    uint8_t stm32_write_flash();
+    uint8_t stm32_get_commands();
+    uint8_t sendCommand(Commands Command, bool sendInverted = true);
+    uint8_t sendAddress(int32_t address);
 
-    char getACKByte();
-    char getNACKByte();
+    uint8_t getACKByte();
+    uint8_t getNACKByte();
     bool isAcknowdledge(int res);
 
 public:
     BootLoader(Communication::COMPort* serialPort) { comPort = serialPort; };
-    int stm32_init();
-    int stm32_Read_Image(char* image, int32_t* size, int32_t address);
-    int stm32_Write_Image(char* image, int32_t size, int32_t address, void* updateprogress);
-    int stm32_get_bootloader_version(float* version);
-    int stm32_get_chip_id(int32_t* version);
-    int stm32_send_go_command();
+    uint8_t stm32_init();
+    uint8_t stm32_Read_Image(uint8_t* image, uint32_t* size, uint32_t address);
+    uint8_t stm32_Write_Image(uint8_t* image, uint32_t size, uint32_t address, void* updateprogress);
+    uint8_t stm32_get_bootloader_version(std::pair<uint8_t, uint8_t>* version);
+    uint8_t stm32_get_chip_id(std::pair<uint8_t, uint8_t>* version);
+    uint8_t stm32_send_go_command();
+    uint32_t stm32_get_default_write_address();
     void stm32_exit();
 };
 }
