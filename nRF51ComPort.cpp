@@ -15,7 +15,7 @@
 
 #include "nRF51ComPort.h"
 
-int nRF51ComPort::NRF51ComPort::sendData(const char* buffer, const size_t length)
+uint8_t nRF51ComPort::NRF51ComPort::sendData(const uint8_t* buffer, const uint32_t length)
 {
     uint32_t errCode = uartTransfer(buffer, length);
     
@@ -33,11 +33,12 @@ int nRF51ComPort::NRF51ComPort::sendData(const char* buffer, const size_t length
     }
 }
 
-int nRF51ComPort::NRF51ComPort::receiveData(char* buffer, size_t* length)
+uint8_t nRF51ComPort::NRF51ComPort::receiveData(uint8_t* buffer, uint32_t* length)
 {
-    uint8_t size = *length;
-    uint32_t errCode = uartReceive(buffer, size);
+    uint32_t errCode = uartReceive(buffer, *length);
+    
     printf("nrf51 recData\n");
+    
     if(0 == errCode)
     {
         return true;
@@ -48,7 +49,7 @@ int nRF51ComPort::NRF51ComPort::receiveData(char* buffer, size_t* length)
     }
 }
 
-int nRF51ComPort::NRF51ComPort::getComPortStatus()
+uint8_t nRF51ComPort::NRF51ComPort::getComPortStatus()
 {
     if(0 == comPortStatus)
     {
@@ -60,7 +61,7 @@ int nRF51ComPort::NRF51ComPort::getComPortStatus()
     }
 }
 
-int nRF51ComPort::NRF51ComPort::close()
+uint8_t nRF51ComPort::NRF51ComPort::close()
 {
     uint32_t errCode = 0;
 //     = app_uart_close();
@@ -75,12 +76,12 @@ int nRF51ComPort::NRF51ComPort::close()
     }
 }
 
-int nRF51ComPort::NRF51ComPort::getBuffSize()
+uint16_t nRF51ComPort::NRF51ComPort::getBuffSize()
 {
     return bufferSize;
 }
 
-int nRF51ComPort::NRF51ComPort::setBuffSize(uint8_t size)
+uint8_t nRF51ComPort::NRF51ComPort::setBuffSize(uint16_t size)
 {
     bufferSize = size;
     

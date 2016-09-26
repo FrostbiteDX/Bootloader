@@ -16,13 +16,13 @@
 #ifndef __NRF51COMPORT_H__
 #define __NRF51COMPORT_H__
 
-#include <cstdio>
-#include <cstring>
-#include "termios.h"
-#include <unistd.h> // UNIX standard function definitions
-#include <fcntl.h> // File control definitions
+// #include <cstdio>
+// #include <cstring>
+// #include <unistd.h> // UNIX standard function definitions
+// #include <fcntl.h> // File control definitions
+// #include <stdint.h>
+#include <cstdint>
 #include <errno.h> // Error number definitions
-#include <sys/types.h>
 #include "communication.h"
 
 extern "C"
@@ -44,12 +44,12 @@ namespace nRF51ComPort
         NRF51ComPort();
         const NRF51ComPort& operator=(const NRF51ComPort& right);
 
-        virtual int sendData(const char* buffer, const size_t length);
-        virtual int receiveData(char* buffer, size_t* length);
-        virtual int getComPortStatus();
-        virtual int close();
-        virtual int getBuffSize();
-        virtual int setBuffSize(uint8_t size);
+        virtual uint8_t sendData(const uint8_t* buffer, const uint32_t length);
+        virtual uint8_t receiveData(uint8_t* buffer, uint32_t* length);
+        virtual uint8_t getComPortStatus();
+        virtual uint8_t close();
+        virtual uint16_t getBuffSize();
+        virtual uint8_t setBuffSize(uint16_t size);
     };
 }
 

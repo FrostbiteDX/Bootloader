@@ -41,10 +41,21 @@ uint8_t stm32loader::BootLoader::sendAddress(int32_t address)
     return comPort->sendData(data, 5) == 5 ? STM32_OK : STM32_COMM_ERROR;
 }
 
+uint8_t stm32loader::BootLoader::stm32_test()
+{
+    uint8_t readBuffer[comPort->getBuffSize()] = { '\0' };
+    uint32_t len = comPort->getBuffSize();
+
+    sendCommand(stm32loader::STM32_CMD_EXTENDED_ERASE_FLASH, false);
+    comPort->receiveData(readBuffer, &len);
+
+    return readBuffer[0];
+}
+
 uint8_t stm32loader::BootLoader::stm32_init()
 {
     uint8_t readBuffer[comPort->getBuffSize()] = { '\0' };
-    size_t len = comPort->getBuffSize();
+    uint32_t len = comPort->getBuffSize();
 
     sendCommand(stm32loader::STM32_CMD_INIT, false);
     comPort->receiveData(readBuffer, &len);
@@ -61,7 +72,7 @@ uint8_t stm32loader::BootLoader::stm32_init()
 
 uint8_t stm32loader::BootLoader::stm32_erase_flash(void)
 {
-    size_t buffsize = comPort->getBuffSize();
+    uint32_t buffsize = comPort->getBuffSize();
     uint8_t readBuffer[buffsize] = { '\0' };
     uint8_t tries = 2;
     bool result = false;
@@ -94,7 +105,7 @@ void stm32loader::BootLoader::stm32_exit()
 
 uint8_t stm32loader::BootLoader::stm32_get_commands()
 {
-    size_t buffsize = comPort->getBuffSize();
+    uint32_t buffsize = comPort->getBuffSize();
     uint8_t readBuffer[buffsize] = { '\0' };
     sendCommand(STM32_CMD_GET_COMMANDS);
     comPort->receiveData(readBuffer, &buffsize);
@@ -108,7 +119,7 @@ uint8_t stm32loader::BootLoader::stm32_get_commands()
 
 uint8_t stm32loader::BootLoader::stm32_get_bootloader_version(std::pair<uint8_t, uint8_t>* version)
 {
-    size_t buffsize = comPort->getBuffSize();
+    uint32_t buffsize = comPort->getBuffSize();
     uint8_t readBuffer[buffsize] = { '\0' };
 
     sendCommand(STM32_CMD_GET_BL_VERSION);
@@ -126,7 +137,7 @@ uint8_t stm32loader::BootLoader::stm32_get_bootloader_version(std::pair<uint8_t,
 
 uint8_t stm32loader::BootLoader::stm32_get_chip_id(std::pair<uint8_t, uint8_t>* version)
 {
-    size_t buffsize = comPort->getBuffSize();
+    uint32_t buffsize = comPort->getBuffSize();
     uint8_t readBuffer[buffsize] = { '\0' };
     sendCommand(STM32_CMD_GET_CHIP_ID);
 
@@ -144,7 +155,7 @@ uint8_t stm32loader::BootLoader::stm32_get_chip_id(std::pair<uint8_t, uint8_t>* 
 
 uint8_t stm32loader::BootLoader::stm32_disable_writeprotection()
 {
-    size_t buffsize = comPort->getBuffSize();
+    uint32_t buffsize = comPort->getBuffSize();
     uint8_t readBuffer[buffsize] = { '\0' };
     sendCommand(STM32_CMD_WRITE_UNPROTECT);
 
@@ -155,7 +166,7 @@ uint8_t stm32loader::BootLoader::stm32_disable_writeprotection()
 
 uint8_t stm32loader::BootLoader::stm32_send_go_command()
 {
-    size_t buffsize = comPort->getBuffSize();
+    uint32_t buffsize = comPort->getBuffSize();
     uint8_t readBuffer[buffsize] = { '\0' };
     int32_t adress = STM32_FLASH_START_ADDRESS;
 
@@ -177,7 +188,7 @@ uint8_t stm32loader::BootLoader::stm32_send_go_command()
 
 uint8_t stm32loader::BootLoader::stm32_Write_Image(uint8_t* image, uint32_t size, uint32_t address, void* updateprogress)
 {
-    size_t buffsize = comPort->getBuffSize();
+    uint32_t buffsize = comPort->getBuffSize();
     uint8_t readBuffer[buffsize] = { '\0' };
 
     unsigned long int currAddress = address;
@@ -285,7 +296,7 @@ uint8_t stm32loader::BootLoader::stm32_Write_Image(uint8_t* image, uint32_t size
 
 uint8_t stm32loader::BootLoader::stm32_Read_Image(uint8_t* image, uint32_t* size, uint32_t address)
 {
-    size_t buffsize = comPort->getBuffSize();
+    uint32_t buffsize = comPort->getBuffSize();
     uint8_t readBuffer[buffsize] = { '\0' };
 
 	if (size <= 0)

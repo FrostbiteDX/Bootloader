@@ -1,16 +1,10 @@
 #ifndef __STM32LD_H__
 #define __STM32LD_H__
 
-#include <cstdio>
-#include <cstring>
 #include <cstdint>
-#include "termios.h"
-#include <unistd.h> // UNIX standard function definitions
-#include <fcntl.h> // File control definitions
 #include <errno.h> // Error number definitions
-#include <sys/types.h>
-#include "communication.h"
 #include <utility>
+#include "communication.h"
 
 namespace stm32loader
 {
@@ -58,6 +52,7 @@ private:
 
 public:
     BootLoader(Communication::COMPort* serialPort) { comPort = serialPort; };
+    uint8_t stm32_test();
     uint8_t stm32_init();
     uint8_t stm32_Read_Image(uint8_t* image, uint32_t* size, uint32_t address);
     uint8_t stm32_Write_Image(uint8_t* image, uint32_t size, uint32_t address, void* updateprogress);
