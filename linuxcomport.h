@@ -7,7 +7,6 @@
 #include <unistd.h> // UNIX standard function definitions
 #include <fcntl.h> // File control definitions
 #include <errno.h> // Error number definitions
-#include <sys/types.h>
 #include "communication.h"
 
 namespace linuxComPort
@@ -27,8 +26,8 @@ public:
     LinuxComPort(const char* portName);
     const LinuxComPort& operator=(const LinuxComPort& right);
 
-    virtual uint8_t sendData(const uint8_t* buffer, const size_t length);
-    virtual uint8_t receiveData(uint8_t* buffer, size_t* length);
+    virtual uint8_t sendData(const uint8_t* buffer, const uint32_t length);
+    virtual uint8_t receiveData(uint8_t* buffer, uint32_t* length);
     virtual uint8_t getComPortStatus();
     virtual uint8_t close();
     virtual uint16_t getBuffSize(){ return BUFFSIZE; };

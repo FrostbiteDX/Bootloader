@@ -1,16 +1,10 @@
 #ifndef __STM32LD_H__
 #define __STM32LD_H__
 
-#include <cstdio>
-#include <cstring>
 #include <cstdint>
-#include "termios.h"
-#include <unistd.h> // UNIX standard function definitions
-#include <fcntl.h> // File control definitions
 #include <errno.h> // Error number definitions
-#include <sys/types.h>
-#include "communication.h"
 #include <utility>
+#include "communication.h"
 
 namespace stm32loader
 {
