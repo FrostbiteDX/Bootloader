@@ -41,17 +41,6 @@ uint8_t stm32loader::BootLoader::sendAddress(int32_t address)
     return comPort->sendData(data, 5) == 5 ? STM32_OK : STM32_COMM_ERROR;
 }
 
-uint8_t stm32loader::BootLoader::stm32_test()
-{
-    uint8_t readBuffer[comPort->getBuffSize()] = { '\0' };
-    uint32_t len = comPort->getBuffSize();
-
-    sendCommand(stm32loader::STM32_CMD_EXTENDED_ERASE_FLASH, false);
-    comPort->receiveData(readBuffer, &len);
-
-    return readBuffer[0];
-}
-
 uint8_t stm32loader::BootLoader::stm32_init()
 {
     uint8_t readBuffer[comPort->getBuffSize()] = { '\0' };

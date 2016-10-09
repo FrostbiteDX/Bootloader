@@ -22,10 +22,6 @@
 extern "C"
 {
 #endif /* __cplusplus */
-    
-#ifdef DEBUG
-    uint8_t stm32loaderCWrapper_stm32_test();  
-#endif /* DEBUG */
 
     uint8_t stm32loaderCWrapper_stm32_init();
     uint8_t stm32loaderCWrapper_stm32_Read_Image(uint8_t* image, uint32_t* size, uint32_t address);

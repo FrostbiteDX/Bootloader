@@ -26,17 +26,6 @@ stm32loader::BootLoader bootloader(&NRF51ComPort);
  
 extern "C"
 {
-#ifdef DEBUG
-    uint8_t stm32loaderCWrapper_stm32_test()
-    {
-        uint8_t result;
-        
-        result = bootloader.stm32_test();
-        
-        return result;
-    }
-#endif /* DEBUG */
-
     uint8_t stm32loaderCWrapper_stm32_init()
     {
         uint8_t result;
