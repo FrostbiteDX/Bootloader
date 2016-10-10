@@ -8,6 +8,13 @@
 namespace Communication
 {
 class COMPort
+
+/**  Class Communication is Base Class for every COMPort used in various Environments, e.g. Linux, BLE-Chip...
+  *	 Contains most basic functions for sending and receiving Data and is used inside Bootloader for standardized access.  
+  *   
+  *  @author Alexander Strobl
+  *  @date 30.09.16 
+  */
 {
 public:
     virtual uint8_t sendData(const uint8_t* buffer, const uint32_t length) = 0;

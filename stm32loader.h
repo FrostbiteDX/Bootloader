@@ -29,6 +29,12 @@ enum Results {
 };
 
 class BootLoader
+/**  Class implements general BootLoader functionality  
+  *	 Please provide COMPort-Object for UART access
+  *   
+  *  @author Alexander Strobl
+  *  @date 30.09.16 
+  */
 {
 private:
     Communication::COMPort* comPort;

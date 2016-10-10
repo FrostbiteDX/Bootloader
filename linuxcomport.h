@@ -13,6 +13,11 @@ namespace linuxComPort
 {
 class LinuxComPort :
     public Communication::COMPort
+/**  Class implements COMPort for Linux  
+  *   
+  *  @author Alexander Strobl
+  *  @date 30.09.16 
+  */
 {
 private:
     struct termios serPortSettings;

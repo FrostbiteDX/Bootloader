@@ -1,4 +1,10 @@
-#include "stm32loader.h"
+/*
+ *
+ *  Created on: 27.04.2016
+ *      Author: Alexander Strobl
+ */
+ 
+ #include "stm32loader.h"
 
 uint8_t stm32loader::BootLoader::getACKByte()
 {
