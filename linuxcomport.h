@@ -7,6 +7,7 @@
 #include <unistd.h> // UNIX standard function definitions
 #include <fcntl.h> // File control definitions
 #include <errno.h> // Error number definitions
+#include <sys/types.h>
 #include "communication.h"
 
 namespace linuxComPort
@@ -23,8 +24,14 @@ private:
     struct termios serPortSettings;
     int16_t fileDescriptor = -1;
     int8_t comPortStatus = -1;
+
+
+    // TODO: set back to 128
 	static const constexpr int16_t BUFFSIZE = 256;
-    static const constexpr speed_t BAUDRATE = B38400;
+
+
+
+	static const constexpr speed_t BAUDRATE = B38400;
 
    uint8_t sendByte(uint8_t data, bool sendInverted = false);
 public:

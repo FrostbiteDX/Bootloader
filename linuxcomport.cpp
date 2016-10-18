@@ -13,7 +13,7 @@ void WaitForAnswer(int16_t fileDescriptor)
     FD_SET(0, &rfds);
     struct timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = 50000;
+    timeout.tv_usec = 100000;
     select(fileDescriptor, &rfds, NULL, NULL, &timeout);
 }
 
