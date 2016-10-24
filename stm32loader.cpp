@@ -25,6 +25,15 @@ bool stm32loader::BootLoader::isAcknowdledge(int res)
     return ret;
 }
 
+bool stm32loader::BootLoader::isSTMOK(int res)
+{
+    bool ret = false;
+    if (res == STM32_OK) {
+        ret = true;
+    }
+    return ret;
+}
+
 uint8_t stm32loader::BootLoader::sendCommand(Commands Command, bool sendInverted)
 {
     uint8_t commandArray[] = {(uint8_t)Command, (uint8_t)(~Command)};
@@ -232,6 +241,13 @@ uint8_t stm32loader::BootLoader::stm32_send_go_command()
 }
 
 uint8_t stm32loader::BootLoader::stm32_Write_Image(uint8_t* image, uint32_t size, uint32_t* address, void* updateprogress)
+/**  Most important function of Bootloader, image size can be abitrarily.
+  *	 Counts up the written memory addresses, so just supply the returned
+  *	 address for further write operations of the same image.
+  *
+  *  @author Alexander Strobl
+  *  @date 24.10.16
+  */
 {
     uint32_t buffsize = comPort->getBuffSize();
     uint8_t readBuffer[buffsize] = { '\0' };
@@ -291,6 +307,12 @@ uint8_t stm32loader::BootLoader::stm32_Write_Image(uint8_t* image, uint32_t size
 }
 
 uint8_t stm32loader::BootLoader::stm32_Read_Image(uint8_t* image, uint32_t* size, uint32_t address)
+/**  Class Communication is Base Class for every COMPort used in various Environments, e.g. Linux, BLE-Chip...
+  *	 Contains most basic functions for sending and receiving Data and is used inside Bootloader for standardized access.
+  *
+  *  @author Alexander Strobl
+  *  @date 30.09.16
+  */
 {
     uint32_t buffsize = comPort->getBuffSize();
     uint8_t readBuffer[buffsize] = { '\0' };
@@ -341,4 +363,106 @@ uint8_t stm32loader::BootLoader::stm32_Read_Image(uint8_t* image, uint32_t* size
 uint32_t stm32loader::BootLoader::stm32_get_default_write_address()
 {
 	return STM32_FLASH_START_ADDRESS;
+}
+
+uint8_t stm32loader::BootLoader::stm32_prepare_flashing()
+/**	This function prepares everything for the Write Memory Command, this includes, disabling writeprotection
+ *  and erasing flash
+ *
+ * 	@author: Alexander Strobl
+ * 	@date: 24.10.16
+ */
+{
+    int result = -1;
+    std::pair<uint8_t, uint8_t> version;
+
+	result = stm32_init();
+
+	if ((result == stm32loader::STM32_INIT_ERROR) || (result == stm32loader::STM32_COMM_ERROR)) {
+		return result;
+	}
+	else {
+		result = stm32_disable_writeprotection();
+		if(!isSTMOK(result))
+		{
+			return STM32_DISABLE_WRITEPROTECTION_FAILED;
+		}
+
+		result = stm32_init();
+		if(!isSTMOK(result))
+		{
+			return STM32_INIT_ERROR;
+		}
+
+		result = stm32_get_bootloader_version(&version);
+		if(!isSTMOK(result))
+		{
+			return STM32_GET_BOOTLOADERVERSION_FAILED;
+		}
+
+
+		if(version.first >= 3) {
+			result = stm32_extended_erase_flash();
+			if(!isSTMOK(result))
+			{
+				return STM32_EXTENDED_ERASE_FAILED;
+			}
+		}
+		else {
+			result = stm32_erase_flash();
+			if(!isSTMOK(result))
+			{
+				return STM32_ERASE_FAILED;
+			}
+		}
+	}
+//		uint32_t startAddress = bootloader->stm32_get_default_write_address();
+//
+//		result = bootloader->stm32_Write_Image(testarray, filesize, &startAddress);
+//		result |= bootloader->stm32_Write_Image(testarray, filesize, &startAddress);
+//
+//
+//		if (result != stm32loader::STM32_OK) {
+//			errorCode = result;
+//			printf("Error Writing Image: %d \n", errorCode);
+//		} else {
+//			printf("Success writing Image \n");
+//
+//			for (uint32_t i = 0; i < filesize; i++)
+//			{
+//				testarray[i] = 0;
+//			}
+//
+//			for (int i = 0; i < 2; i++) {
+//				result = bootloader->stm32_Read_Image(testarray, &filesize, bootloader->stm32_get_default_write_address() + i * filesize);
+//
+//				for (uint32_t j = 0; j < filesize; j++)
+//				{
+//					printf("Gelesen index %d: number \"%d\" \n", j + i * filesize, testarray[j + 1]);
+//				}
+//
+//				printf("next read \n");
+//			}
+//
+//			errorCode = bootloader->stm32_send_go_command();
+//			printf("result go: %x \n", errorCode);
+//		}
+//	}
+//
+//	bootloader->stm32_exit();
+
+	return STM32_OK;
+}
+
+uint8_t stm32loader::BootLoader::stm32_finish_flashing()
+/**	This function ends the process of flashing by sending Go command and disabling the COMPort.
+ *
+ * 	@author: Alexander Strobl
+ * 	@date: 24.10.16
+ */
+{
+	uint8_t res = stm32_send_go_command();
+	stm32_exit();
+
+	return res;
 }
