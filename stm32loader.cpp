@@ -307,12 +307,6 @@ uint8_t stm32loader::BootLoader::stm32_Write_Image(uint8_t* image, uint32_t size
 }
 
 uint8_t stm32loader::BootLoader::stm32_Read_Image(uint8_t* image, uint32_t* size, uint32_t address)
-/**  Class Communication is Base Class for every COMPort used in various Environments, e.g. Linux, BLE-Chip...
-  *	 Contains most basic functions for sending and receiving Data and is used inside Bootloader for standardized access.
-  *
-  *  @author Alexander Strobl
-  *  @date 30.09.16
-  */
 {
     uint32_t buffsize = comPort->getBuffSize();
     uint8_t readBuffer[buffsize] = { '\0' };
