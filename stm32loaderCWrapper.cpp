@@ -18,8 +18,8 @@
 #include "stm32loader.h"
 #include "nRF51ComPort.h"
 
-#define SUCCESS ((uint8_t) 1)
-#define ERROR ((uint8_t) 0)
+#define SUCCESS ((uint8_t) 1)   /**< Error code for success. */
+#define ERROR ((uint8_t) 0)     /**< Error code for an error. */
 
 nRF51ComPort::NRF51ComPort NRF51ComPort;
 stm32loader::BootLoader bootloader(&NRF51ComPort);
@@ -94,16 +94,16 @@ extern "C"
         }
     }
         
-    uint8_t stm32loaderCWrapper_stm32_get_chip_id(uint16_t* version)
+    uint8_t stm32loaderCWrapper_stm32_get_chip_id(uint16_t* id)
     {
         uint8_t result;
-        std::pair<uint8_t, uint8_t> tmpVersion;
+        std::pair<uint8_t, uint8_t> tmpId;
         
-        result = bootloader.stm32_get_chip_id(&tmpVersion);
+        result = bootloader.stm32_get_chip_id(&tmpId);
 
-        *version = tmpVersion.first;
-        *version = *version << 8;
-        *version = *version | (tmpVersion.second & 0x00FF);
+        *id = tmpId.first;
+        *id = *id << 8;
+        *id = *id | (tmpVersion.second & 0x00FF);
     
         if(0 != result)
         {
