@@ -23,12 +23,55 @@ extern "C"
 {
 #endif /* __cplusplus */
 
+    /**
+    * @brief  Wrapper for the init function of the stm32loader. 
+    */
     uint8_t stm32loaderCWrapper_stm32_init();
+    
+    /**
+    * @brief  Wrapper for the read image function of the stm32loader. 
+
+    * @param[in] image Buffer in which the image is stored.
+    * @param[in] size  Size of the image.
+    * @param[in] address Address pointer for the destination of the image.
+    * @retval Error code (true or false).
+    */
     uint8_t stm32loaderCWrapper_stm32_Read_Image(uint8_t* image, uint32_t* size, uint32_t address);
+    
+    /**
+    * @brief  Wrapper for the write image function of the stm32loader. 
+    * @param[in] buffer Buffer to be sent.
+    * @param[in] updateprogress Current progress of the update.
+    * @retval Error code (true or false).
+    */
     uint8_t stm32loaderCWrapper_stm32_Write_Image(uint8_t* image, uint32_t size, uint32_t address, void* updateprogress);
+    
+    /**
+    * @brief  Wrapper function of the stm32loader for reading the current bootloader version. 
+
+    * @param[in] version Variable in which the version shall be stored.
+    * @retval Error code (true or false).
+    */
     uint8_t stm32loaderCWrapper_stm32_get_bootloader_version(uint8_t* version);
-    uint8_t stm32loaderCWrapper_stm32_get_chip_id(uint16_t* version);
+    
+    /**
+    * @brief  Wrapper function of the stm32loader for getting the chip ID. 
+
+    * @param[in] id Chip ID.
+    * @retval Error code (true or false).
+    */
+    uint8_t stm32loaderCWrapper_stm32_get_chip_id(uint16_t* id);
+    
+    /**
+    * @brief  Wrapper function for sending the go command to the target microcontroller after flashing. 
+
+    * @retval Error code (true or false).
+    */
     uint8_t stm32loaderCWrapper_stm32_send_go_command();
+    
+    /**
+    * @brief  Wrapper function for closing the com port. 
+    */
     void stm32loaderCWrapper_stm32_exit();
 #ifdef __cplusplus
 }
